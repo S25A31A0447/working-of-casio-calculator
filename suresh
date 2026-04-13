@@ -1,0 +1,273 @@
+//Location tracking
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#define MAX 200
+
+// ---------------- STRUCTURES ----------------
+
+typedef struct {
+    float lat;
+    float lon;
+} Coordinates;
+
+typedef enum {
+    HOSPITAL,
+    SCHOOL,
+    BUILDING,
+    OTHER
+} LocationType;
+
+typedef struct {
+    char name[100];
+    LocationType type;
+    Coordinates coord;
+} Location;
+
+// ---------------- GLOBAL DATA ----------------
+
+Location locations[MAX];
+int count = 0;
+
+// ---------------- UTILITY FUNCTIONS ----------------
+
+const char* getType(LocationType t) {
+    switch(t) {
+        case HOSPITAL: return "Hospital";
+        case SCHOOL: return "School";
+        case BUILDING: return "Building";
+        default: return "Other";
+    }
+}
+
+// Distance (Euclidean approximation)
+float distance(Coordinates a, Coordinates b) {
+    return sqrt((a.lat - b.lat) * (a.lat - b.lat) +
+                (a.lon - b.lon) * (a.lon - b.lon));
+}
+
+// ---------------- GOOGLE MAPS FUNCTIONS ----------------
+
+// Open single location
+void openLocationInMaps(Coordinates c) {
+    char url[300];
+    char cmd[400];
+
+    sprintf(url, "https://www.google.com/maps?q=%f,%f", c.lat, c.lon);
+
+    printf("\nOpening Google Maps: %s\n", url);
+
+    #ifdef _WIN32
+        sprintf(cmd, "start %s", url);
+    #elif __APPLE__
+        sprintf(cmd, "open \"%s\"", url);
+    #else
+        sprintf(cmd, "xdg-open \"%s\"", url);
+    #endif
+
+    system(cmd);
+}
+
+// Open directions between two points
+void openDirections(Coordinates a, Coordinates b) {
+    char url[400];
+    char cmd[500];
+
+    sprintf(url,
+        "https://www.google.com/maps/dir/%f,%f/%f,%f",
+        a.lat, a.lon, b.lat, b.lon);
+
+    printf("\nOpening Directions in Google Maps...\n");
+
+    #ifdef _WIN32
+        sprintf(cmd, "start %s", url);
+    #elif __APPLE__
+        sprintf(cmd, "open \"%s\"", url);
+    #else
+        sprintf(cmd, "xdg-open \"%s\"", url);
+    #endif
+
+    system(cmd);
+}
+
+// ---------------- CORE FEATURES ----------------
+
+// Add location
+void addLocation() {
+    if (count >= MAX) {
+        printf("Storage full!\n");
+        return;
+    }
+
+    Location l;
+
+    printf("\nEnter name: ");
+    scanf(" %[^\n]", l.name);
+
+    int t;
+    printf("Type (0=Hospital,1=School,2=Building,3=Other): ");
+    scanf("%d", &t);
+    l.type = (LocationType)t;
+
+    printf("Latitude: ");
+    scanf("%f", &l.coord.lat);
+
+    printf("Longitude: ");
+    scanf("%f", &l.coord.lon);
+
+    locations[count++] = l;
+
+    printf("Location saved!\n");
+}
+
+// Display all
+void showAll() {
+    if (count == 0) {
+        printf("No locations stored.\n");
+        return;
+    }
+
+    printf("\n------ ALL LOCATIONS ------\n");
+
+    for (int i = 0; i < count; i++) {
+        printf("%d. %s | %s | (%.4f, %.4f)\n",
+            i+1,
+            locations[i].name,
+            getType(locations[i].type),
+            locations[i].coord.lat,
+            locations[i].coord.lon
+        );
+    }
+}
+
+// Search by type
+void searchType() {
+    int t;
+    printf("Enter type (0-3): ");
+    scanf("%d", &t);
+
+    printf("\n--- RESULTS ---\n");
+
+    for (int i = 0; i < count; i++) {
+        if (locations[i].type == t) {
+            printf("%s -> (%.4f, %.4f)\n",
+                locations[i].name,
+                locations[i].coord.lat,
+                locations[i].coord.lon);
+        }
+    }
+}
+
+// Find nearest location
+void findNearest() {
+    if (count == 0) {
+        printf("No data.\n");
+        return;
+    }
+
+    Coordinates user;
+    printf("Enter your latitude: ");
+    scanf("%f", &user.lat);
+
+    printf("Enter your longitude: ");
+    scanf("%f", &user.lon);
+
+    int idx = -1;
+    float min = 1e9;
+
+    for (int i = 0; i < count; i++) {
+        float d = distance(user, locations[i].coord);
+        if (d < min) {
+            min = d;
+            idx = i;
+        }
+    }
+
+    printf("\nNearest Location: %s (%.4f, %.4f)\n",
+        locations[idx].name,
+        locations[idx].coord.lat,
+        locations[idx].coord.lon);
+
+    printf("Distance: %.4f\n", min);
+
+    // Open in Google Maps
+    openLocationInMaps(locations[idx].coord);
+}
+
+// Open a stored location
+void openSavedLocation() {
+    int id;
+
+    showAll();
+
+    printf("\nEnter location number to open in Maps: ");
+    scanf("%d", &id);
+
+    if (id < 1 || id > count) {
+        printf("Invalid choice!\n");
+        return;
+    }
+
+    openLocationInMaps(locations[id-1].coord);
+}
+
+// Directions between two saved locations
+void directionsBetweenLocations() {
+    int a, b;
+
+    showAll();
+
+    printf("\nEnter START location number: ");
+    scanf("%d", &a);
+
+    printf("Enter END location number: ");
+    scanf("%d", &b);
+
+    if (a < 1 || a > count || b < 1 || b > count) {
+        printf("Invalid input!\n");
+        return;
+    }
+
+    openDirections(locations[a-1].coord,
+                   locations[b-1].coord);
+}
+
+// ---------------- MENU ----------------
+
+void menu() {
+    int choice;
+
+    while (1) {
+        printf("\n\n===== LOCATION TRACKER =====\n");
+        printf("1. Add Location\n");
+        printf("2. Show All Locations\n");
+        printf("3. Search by Type\n");
+        printf("4. Find Nearest Location\n");
+        printf("5. Open Location in Google Maps\n");
+        printf("6. Get Directions Between Locations\n");
+        printf("7. Exit\n");
+        printf("Enter choice: ");
+
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1: addLocation(); break;
+            case 2: showAll(); break;
+            case 3: searchType(); break;
+            case 4: findNearest(); break;
+            case 5: openSavedLocation(); break;
+            case 6: directionsBetweenLocations(); break;
+            case 7: exit(0);
+            default: printf("Invalid choice!\n");
+        }
+    }
+}
+
+// ---------------- MAIN ----------------
+
+int main() {
+    menu();
+    return 0;
+}
