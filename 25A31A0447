@@ -1,0 +1,199 @@
+# working-of-casio-calculator
+#include <stdio.h>
+#include <math.h>
+
+#define PI 3.141592653589793
+
+double memory = 0;
+int mode = 0; // 0 = Degree, 1 = Radian
+
+// Convert degree to radian if needed
+double toRadians(double x) {
+    if (mode == 0)
+        return x * PI / 180;
+    return x;
+}
+
+// Factorial function
+long long factorial(int n) {
+    if (n < 0) return -1;
+    long long fact = 1;
+    for (int i = 1; i <= n; i++)
+        fact *= i;
+    return fact;
+}
+
+// nCr
+long long combination(int n, int r) {
+    return factorial(n) / (factorial(r) * factorial(n - r));
+}
+
+// nPr
+long long permutation(int n, int r) {
+    return factorial(n) / factorial(n - r);
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n==== FX-991MS Advanced Calculator ====\n");
+        printf("Mode: %s\n", mode == 0 ? "DEGREE" : "RADIAN");
+
+        printf("1. Addition\n");
+        printf("2. Subtraction\n");
+        printf("3. Multiplication\n");
+        printf("4. Division\n");
+        printf("5. Trigonometric Functions\n");
+        printf("6. Logarithmic Functions\n");
+        printf("7. Power & Roots\n");
+        printf("8. Factorial\n");
+        printf("9. Permutation (nPr)\n");
+        printf("10. Combination (nCr)\n");
+        printf("11. Memory Operations\n");
+        printf("12. Mode Switch (Deg/Rad)\n");
+        printf("13. Extra Functions\n");
+        printf("0. Exit\n");
+
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        double a, b, result;
+        int n, r;
+
+        switch (choice) {
+
+        case 1:
+            printf("Enter two numbers: ");
+            scanf("%lf %lf", &a, &b);
+            printf("Result = %.5lf\n", a + b);
+            break;
+
+        case 2:
+            printf("Enter two numbers: ");
+            scanf("%lf %lf", &a, &b);
+            printf("Result = %.5lf\n", a - b);
+            break;
+
+        case 3:
+            printf("Enter two numbers: ");
+            scanf("%lf %lf", &a, &b);
+            printf("Result = %.5lf\n", a * b);
+            break;
+
+        case 4:
+            printf("Enter two numbers: ");
+            scanf("%lf %lf", &a, &b);
+            if (b != 0)
+                printf("Result = %.5lf\n", a / b);
+            else
+                printf("Error: Division by zero\n");
+            break;
+
+        case 5: {
+            int op;
+            printf("1.sin 2.cos 3.tan\n");
+            scanf("%d", &op);
+            printf("Enter value: ");
+            scanf("%lf", &a);
+
+            double rad = toRadians(a);
+
+            if (op == 1) printf("sin = %.5lf\n", sin(rad));
+            else if (op == 2) printf("cos = %.5lf\n", cos(rad));
+            else if (op == 3) printf("tan = %.5lf\n", tan(rad));
+            else printf("Invalid\n");
+            break;
+        }
+
+        case 6: {
+            int op;
+            printf("1.log10 2.ln\n");
+            scanf("%d", &op);
+            printf("Enter value: ");
+            scanf("%lf", &a);
+
+            if (op == 1) printf("log = %.5lf\n", log10(a));
+            else if (op == 2) printf("ln = %.5lf\n", log(a));
+            else printf("Invalid\n");
+            break;
+        }
+
+        case 7:
+            printf("Enter base and exponent: ");
+            scanf("%lf %lf", &a, &b);
+            printf("Power = %.5lf\n", pow(a, b));
+            printf("Square root of base = %.5lf\n", sqrt(a));
+            break;
+
+        case 8:
+            printf("Enter integer: ");
+            scanf("%d", &n);
+            printf("Factorial = %lld\n", factorial(n));
+            break;
+
+        case 9:
+            printf("Enter n and r: ");
+            scanf("%d %d", &n, &r);
+            printf("nPr = %lld\n", permutation(n, r));
+            break;
+
+        case 10:
+            printf("Enter n and r: ");
+            scanf("%d %d", &n, &r);
+            printf("nCr = %lld\n", combination(n, r));
+            break;
+
+        case 11: {
+            int op;
+            printf("1.M= 2.M+ 3.M- 4.MR\n");
+            scanf("%d", &op);
+
+            if (op == 1) {
+                printf("Enter value: ");
+                scanf("%lf", &memory);
+            } else if (op == 2) {
+                printf("Enter value: ");
+                scanf("%lf", &a);
+                memory += a;
+            } else if (op == 3) {
+                printf("Enter value: ");
+                scanf("%lf", &a);
+                memory -= a;
+            } else if (op == 4) {
+                printf("Memory = %.5lf\n", memory);
+            }
+            break;
+        }
+
+        case 12:
+            mode = !mode;
+            printf("Mode switched!\n");
+            break;
+
+        case 13: {
+            int op;
+            printf("1.Absolute 2.Exponential(e^x) 3.Inverse(1/x)\n");
+            scanf("%d", &op);
+            printf("Enter value: ");
+            scanf("%lf", &a);
+
+            if (op == 1) printf("|x| = %.5lf\n", fabs(a));
+            else if (op == 2) printf("e^x = %.5lf\n", exp(a));
+            else if (op == 3) {
+                if (a != 0)
+                    printf("1/x = %.5lf\n", 1 / a);
+                else
+                    printf("Error\n");
+            }
+            break;
+        }
+
+        case 0:
+            return 0;
+
+        default:
+            printf("Invalid choice\n");
+        }
+    }
+}
